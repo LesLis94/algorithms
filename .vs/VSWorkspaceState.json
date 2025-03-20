@@ -1,7 +1,11 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\algorithms",
+    "\\algorithms\\Controllers",
+    "\\algorithms\\obj",
+    "\\algorithms\\Properties"
   ],
-  "SelectedNode": "\\algorithms",
+  "SelectedNode": "\\algorithms\\Controllers",
   "PreviewInSolutionExplorer": false
 }

@@ -1,0 +1,18 @@
+[
+  {
+    "ContainingType": "algorithms.Controllers.CalculController",
+    "Method": "Calculate",
+    "RelativePath": "api/Calcul",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "expression",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

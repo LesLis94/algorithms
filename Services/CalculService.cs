@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Microsoft.Extensions.Primitives;
 
 namespace algorithms.Services
 {
@@ -6,7 +7,7 @@ namespace algorithms.Services
     {
         public CalculService(string text) 
         {
-            string stringDecimal = "";
+            string stringValue = "";
 
             double a = 1;
             double b = 2;
@@ -26,24 +27,35 @@ namespace algorithms.Services
                     Expression.Lambda<Func<double>>(addExpression);
 
             Func<double> compiledLambda = lambdaExpression.Compile();
-            var result = compiledLambda(); 
+            var result = compiledLambda();
 
 
+
+
+
+            List<String> partsEquation = new List<String>;
 
             foreach (var item in text)
             {
                 if (item == ' ') continue;
 
-                if (item == '(') continue;
+                // if (item == '(') continue;
 
-                if(char.IsDigit(item) || item == '.')
+                if (char.IsDigit(item) || item == '.')
                 {
-                    stringDecimal += item;
+                    stringValue += item;
                 }
-                if (!string.IsNullOrEmpty(stringDecimal))
-                {
-                    decimal.TryParse(stringDecimal, out decimal number);
-                }
+
+                //if (!string.IsNullOrEmpty(stringDecimal))
+                //{
+                //    decimal.TryParse(stringDecimal, out decimal number);
+                // }
+
+                partsEquation.Add(stringValue);
+                // надо прописать условие, что если это число то должно быть булево которое регулирует когда число закончилось, чтобы его добавить в лист
+                // тогда для всех остальных континиум должен быть свой и добавление мб типа того
+                
+                stringValue = "";
             }
         }
 

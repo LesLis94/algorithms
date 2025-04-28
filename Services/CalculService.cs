@@ -1,42 +1,18 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Primitives;
 
 namespace algorithms.Services
 {
     public class CalculService
     {
-        public CalculService(string text) 
+        public double CalculetService(string text) 
         {
-            
-
-            double a = 1;
-            double b = 2;
-            double c = 3;
-            // ParameterExpression par1 = Expression.Parameter(typeof(double), "a");
-            // ParameterExpression par2 = Expression.Parameter(typeof(double), "b");
-            // ConstantExpression par1 = Expression.Constant(a);
-            // ConstantExpression par2 = Expression.Constant(b);
-
-            //BinaryExpression multyplyExpression = Expression.Multiply(par1, par2);
-
-            //ConstantExpression par3 = Expression.Constant(c);
-
-            //BinaryExpression addExpression = Expression.Add(multyplyExpression, par3);
-
-            /*
-            Expression<Func<double>> lambdaExpression =
-                    Expression.Lambda<Func<double>>(addExpression);
-
-            Func<double> compiledLambda = lambdaExpression.Compile();
-            var result = compiledLambda();  */
-
-            text = "3+4*5";
-
             string stringValue = "";
             List<String> partsEquation = new List<String>();
 
-            //foreach (var item in text)
             for (int i = 0; i < text.Length; i++)
             {
                 var item = text[i];
@@ -47,7 +23,7 @@ namespace algorithms.Services
                     if (i == text.Length-1) partsEquation.Add($"{stringValue}");
 
                     continue;
-                }
+                };
                
                 if (stringValue != "")
                 {
@@ -57,100 +33,138 @@ namespace algorithms.Services
                     if (item != ' ') partsEquation.Add($"{item}");
 
                     continue;
-                }
+                };
 
                 if (item == ' ')
                 {
                     if (i == text.Length - 1) partsEquation.Add($"{stringValue}");
                     continue;
-                }
+                };
+
+                if (item == '-' || item == '+')
+                {
+                   if (i == 0)
+                    {
+                        stringValue += item;
+                        continue;
+                    };
+                   
+                    if (partsEquation[partsEquation.Count() - 1] == "(")
+                    {
+                        stringValue += item;
+                        continue;
+                    };
+                };
 
                 partsEquation.Add($"{item}");        
             }
 
-            var resultT = RecursionLambda(partsEquation);
+            var resultT = RecursionLambda(partsEquation, 0, partsEquation.Count());
 
-           // Expression<Func<double>> lambdaExpression =
-           //         Expression.Lambda<Func<double>>(resultT);
+            Expression<Func<double>> lambdaExpression =
+                    Expression.Lambda<Func<double>>(resultT);
 
-          //  Func<double> compiledLambda = lambdaExpression.Compile();
-           // var result = compiledLambda();
+            Func<double> compiledLambda = lambdaExpression.Compile();
+            var result = compiledLambda();
+
+            return result;
         }
 
-        private int RecursionLambda(List<String> partsEquation)
+        private Expression RecursionLambda(List<String> partsEquation, int start, int end)
         {
-            //BinaryExpression
-            // for (int i = 0; i < partsEquation.Count; i++)
-            // {
 
-            // ((4*3) + 6) / 2 - (4+2)
+            var operators = new Stack<string>();
+            var operands = new Stack<Expression>();
 
-            //      var binaryExpression = nextBinaryExpression(partsEquation, i);
-            //}
-            var resultsMultiply = partsEquation.Where(x => x == "*").ToList();
+            for (int i = start; i < end; i++)
+            {
+                var value = partsEquation[i];
+                if (double.TryParse(value, out double valueDouble))
+                {
+                    operands.Push(Expression.Constant(valueDouble));
+                }
+                else if (value == "*" || value == "/" || value == "^" || value == "+" || value == "-")
+                {
 
-            return 0;
+                    while (operators.Count > 0 && PriorityOperator(operators.Peek()) >= PriorityOperator(value))
+                    {
+                        ExpressionBinary(operators.Pop(), operands);
+                    }
+
+                    operators.Push(value);
+                }
+                else if (value == "(")
+                {
+                    int s = i + 1;
+                    int e = i + 1;
+                    int numberBrackets = 0;
+                    for (int ie = e; ie < end; ie++)
+                    {
+                        var v = partsEquation[ie];
+                        if (v == ")")
+                        {
+                            if (numberBrackets == 0)
+                            {
+                                e = ie;
+                                break;
+                            }
+                            else
+                            {
+                                numberBrackets--;
+                            }
+                        }
+                        if (v == "(")
+                        {
+                            numberBrackets++;
+                        }
+                    }
+                    operands.Push(RecursionLambda(partsEquation, s, e));
+                    i = e;
+                }
+            }
+
+            while (operators.Count > 0)
+            {
+                ExpressionBinary(operators.Pop(), operands);
+            }
+
+            return operands.Pop();
+        }
+ 
+        private int PriorityOperator(string op)
+        {
+            return op switch
+            {
+                "+" or "-" => 1,
+                "*" or "/" => 2,
+                "^" => 3,
+                _ => 0
+            };
         }
 
-        private void nextBinaryExpression(List<String> partsEquation, int i)
+        private void ExpressionBinary(string sign, Stack<Expression> operands)
         {
-            //BinaryExpression
-            if (partsEquation[i] == "(")
-            {
-                // ((4*3) + 6) / 2 - (4+2)
-                int indexNext = i;
-                indexNext++;
-               // var binaryExpression = nextBinaryExpression(partsEquation, indexNext);
+            var right = operands.Pop();
+            var left = operands.Pop();
+
+            switch(sign) {
+
+                case "+":
+                    operands.Push(Expression.Add(left, right));
+                    break;
+                case "-":
+                    operands.Push(Expression.Subtract(left, right));
+                    break;
+                case "*":
+                    operands.Push(Expression.Multiply(left, right));
+                    break;
+                case "/":
+                    operands.Push(Expression.Divide(left, right));
+                    break;
+                case "^":
+                    operands.Push(Expression.Power(left, right));
+                    break;
             }
-            if (double.TryParse(partsEquation[i], out double value)) {
-                var expression = ExpressionBinary("+", Expression.Constant(value), Expression.Constant(0));
-               // return expression;
-            }
-
-
-
-
-           // return expression;
-        }
-
-        private BinaryExpression ExpressionBinary(string sign, Expression par1, Expression par2)
-        {
-            //ConstantExpression par1 = Expression.Constant(a);
-            //ConstantExpression par2 = Expression.Constant(b);
-            //BinaryExpression expression = BinaryExpression.Default(double);
-
-
-            if (sign == "+")
-            {
-                BinaryExpression expression = Expression.Add(par1, par2);
-                return expression;
-            }
-            if (sign == "-")
-            {
-                BinaryExpression expression = Expression.Subtract(par1, par2);
-                return expression;
-            }
-            if (sign == "*")
-            {
-                BinaryExpression expression = Expression.Multiply(par1, par2);
-                return expression;
-            }
-            if (sign == "/")
-            {
-                BinaryExpression expression = Expression.Divide(par1, par2);
-                return expression;
-            }
-            if (sign == "^")
-            {
-                BinaryExpression expression = Expression.Power(par1, par2);
-                return expression;
-            }
-       
-                
-            
-            // BinaryExpression addExpression = Expression.Add(multyplyExpression, par3);
-
-            return null;
         }
     }
 }

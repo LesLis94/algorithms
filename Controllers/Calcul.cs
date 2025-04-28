@@ -11,9 +11,9 @@ namespace algorithms.Controllers
         public async Task<ActionResult> Calculate(string expression)
         {
 
-            var result = new CalculService(expression);
-
-            return Ok();
+            var calcul = new CalculService();
+            var result = calcul.CalculetService(expression);
+            return Ok(result);
         }
     }
 }

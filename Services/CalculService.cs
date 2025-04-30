@@ -17,53 +17,26 @@ namespace algorithms.Services
             {
                 var item = text[i];
 
-                if (char.IsDigit(item) || item == '.')
+                if (char.IsDigit(item) || item == '.' || ((item == '-' || item == '+') && (i == 0 || partsEquation[partsEquation.Count() - 1] == "(")))
                 {
                     stringValue += item;
-                    if (i == text.Length-1) partsEquation.Add($"{stringValue}");
-
                     continue;
-                };
-               
+                };               
                 if (stringValue != "")
                 {
                     partsEquation.Add(stringValue);
                     stringValue = "";
-
-                    if (item != ' ') partsEquation.Add($"{item}");
-
-                    continue;
                 };
-
-                if (item == ' ')
-                {
-                    if (i == text.Length - 1) partsEquation.Add($"{stringValue}");
-                    continue;
-                };
-
-                if (item == '-' || item == '+')
-                {
-                   if (i == 0)
-                    {
-                        stringValue += item;
-                        continue;
-                    };
-                   
-                    if (partsEquation[partsEquation.Count() - 1] == "(")
-                    {
-                        stringValue += item;
-                        continue;
-                    };
-                };
-
+                if (item == ' ') continue;
+  
                 partsEquation.Add($"{item}");        
             }
+            if (stringValue != "") partsEquation.Add($"{stringValue}");
 
             var resultT = RecursionLambda(partsEquation, 0, partsEquation.Count());
 
             Expression<Func<double>> lambdaExpression =
                     Expression.Lambda<Func<double>>(resultT);
-
             Func<double> compiledLambda = lambdaExpression.Compile();
             var result = compiledLambda();
 
@@ -72,7 +45,6 @@ namespace algorithms.Services
 
         private Expression RecursionLambda(List<String> partsEquation, int start, int end)
         {
-
             var operators = new Stack<string>();
             var operands = new Stack<Expression>();
 
@@ -85,41 +57,24 @@ namespace algorithms.Services
                 }
                 else if (value == "*" || value == "/" || value == "^" || value == "+" || value == "-")
                 {
-
                     while (operators.Count > 0 && PriorityOperator(operators.Peek()) >= PriorityOperator(value))
                     {
                         ExpressionBinary(operators.Pop(), operands);
                     }
-
                     operators.Push(value);
                 }
                 else if (value == "(")
                 {
-                    int s = i + 1;
-                    int e = i + 1;
-                    int numberBrackets = 0;
-                    for (int ie = e; ie < end; ie++)
+                    int endBracket = i;
+                    int valueBrackets = 1;
+
+                    while (valueBrackets > 0 && ++endBracket < end)
                     {
-                        var v = partsEquation[ie];
-                        if (v == ")")
-                        {
-                            if (numberBrackets == 0)
-                            {
-                                e = ie;
-                                break;
-                            }
-                            else
-                            {
-                                numberBrackets--;
-                            }
-                        }
-                        if (v == "(")
-                        {
-                            numberBrackets++;
-                        }
+                        if (partsEquation[endBracket] == "(") valueBrackets++;
+                        if (partsEquation[endBracket] == ")") valueBrackets--;
                     }
-                    operands.Push(RecursionLambda(partsEquation, s, e));
-                    i = e;
+                    operands.Push(RecursionLambda(partsEquation, i + 1, endBracket));
+                    i = endBracket;
                 }
             }
 
